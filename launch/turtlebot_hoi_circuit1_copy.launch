@@ -1,0 +1,52 @@
+<launch>
+    <!-- Configurable arguments -->
+    <param name="~frame_id" type="string" value="world" /> 
+    <arg name="robot_name" default="turtlebot"/>
+    <arg name="simulation_data" default="$(find turtlebot_simulation)/resources"/>
+    <arg name="scenario_description" default="$(find turtlebot_simulation)/scenarios/turtlebot_hoi_circuit1_copy.scn"/>
+    <arg name="simulation_rate" default="1000.0"/>
+    <arg name="graphics_resolution" default="1200 800"/>
+    <arg name="graphics_quality" default="high"/>
+
+    <!-- Static transform -->
+    <node name="map_to_base_transform" pkg="tf2_ros" type="static_transform_publisher" args="0 0 0 0 0 0 world turtlebot/kobuki/base_footprint"/> 
+    <node name="world2ned" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0.0 world world_ned  100"/>      
+
+    <node name="realsense_color" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 camera_color_optical_frame $(arg robot_name)/kobuki/realsense_color 100"/>
+    <node name="realsense_depth" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 camera_depth_optical_frame $(arg robot_name)/kobuki/realsense_depth 100"/>
+
+    <node pkg="turtlebot_simulation" type="laser_scan_to_point_cloud_node.py" name="laserscan_to_pointcloud"/>
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap" output="screen">
+        <remap to="/laserscan_to_pointcloud/converted_pc" from="/cloud_in"/>
+    </node>
+
+    <!-- Namespace with robot name --> 
+    <group ns="$(arg robot_name)">
+        <!-- Run Simulator -->
+        <node name="stonefish_simulator" pkg="stonefish_ros" type="parsed_simulator" 
+            args="$(arg simulation_data) $(arg scenario_description) $(arg simulation_rate) $(arg graphics_resolution) $(arg graphics_quality)" output="screen">
+            <param name="robot_name" value="$(arg robot_name)"/>
+            <remap from="swiftpro/joint_states" to="joint_states"/>
+        </node>
+
+        <!-- Load ROS Control --> 
+        <group ns="swiftpro">
+            <rosparam command="load" file="$(find turtlebot_simulation)/config/turtlebot.yaml" />
+            <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+                args="joint_state_controller joint_velocity_controller" />
+        </group>
+
+        <!-- Load robot description -->
+        <param name="robot_description" command="$(find xacro)/xacro '$(find turtlebot_description)/urdf/turtlebot.urdf.xacro'" />
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+        <node name="swiftpro_rviz_node" pkg="swiftpro_description" type="swiftpro_rviz_node">
+            <param name="namespace" value="$(arg robot_name)/swiftpro"/>
+            <remap from="swiftpro_rviz_node/joint_states" to="joint_states"/>
+        </node> 
+
+
+
+        <!-- RVIZ -->
+        <node pkg="rviz" type="rviz" name="rviz" args="-d $(find turtlebot_description)/rviz/turtlebot.rviz"/>
+    </group>
+</launch>

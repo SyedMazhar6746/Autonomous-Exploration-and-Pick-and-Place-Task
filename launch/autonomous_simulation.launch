@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <include file="$(find turtlebot_simulation)/launch/turtlebot_hoi_circuit1_copy.launch" />  
+    
+    <node name="behavior_1" pkg="turtlebot_simulation" type="final_img_sub_simu.py" output="screen"/>
+    <node name="behavior_2" pkg="turtlebot_simulation" type="final_aruco_slam_no_camera_simulation.py" output="screen"/>
+    <node name="behavior_3" pkg="turtlebot_simulation" type="final_mob_aruco_pos_simu_exploration.py" output="screen"/>
+    <node name="behavior_4" pkg="turtlebot_simulation" type="final_mob_aruco_pos_simu_service.py" output="screen"/> 
+    
+    <node name="behavior_5" pkg="turtlebot_simulation" type="final_all_services.py" output="screen"/>  
+    <node name="behavior_6" pkg="turtlebot_simulation" type="final_mob_hands_on_func_call_3_with_param.py" output="screen"/>   
+    <node name="behavior_7" pkg="turtlebot_simulation" type="final_turtlebot_online_path_planning_node_autonomous_simu.py" output="screen"/>   
+    <node name="behavior_8" pkg="turtlebot_simulation" type="final_exploration_simulation_autonomous.py" output="screen"/>   
+    <node name="behavior_9" pkg="turtlebot_simulation" type="final_planning_inter_behavior_tree_simu_exploration.py" output="screen"/>    
+ 
+</launch>   
